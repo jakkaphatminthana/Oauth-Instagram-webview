@@ -122,4 +122,27 @@ class InstagramAPI {
       throw Exception('Failed to fetch Instagram images');
     }
   }
+
+  //TODO 4: Get Username
+  Future<String> getUserData(String accessToken) async {
+    const String userDataUrl = 'https://graph.instagram.com/me';
+
+    //1. get user data from api
+    final Response response = await _dio.get(
+      userDataUrl,
+      queryParameters: {
+        'fields': 'id,username', //ขอบเขตที่ขอ
+        'access_token': accessToken, //token
+      },
+    );
+
+    //2. return user data
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = response.data;
+      final String username = responseData['username'].toString();
+      return username;
+    } else {
+      throw Exception('Failed to fetch Instagram user data');
+    }
+  }
 }
