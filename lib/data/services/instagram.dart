@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class InstagramAPI {
@@ -19,8 +20,7 @@ class InstagramAPI {
       'https://api.instagram.com/oauth/authorize?client_id=$appId&redirect_uri=$redirectUri&scope=$scope&response_type=code';
 
   final Dio _dio = Dio();
-  final Completer<WebViewController> _controller =
-      Completer<WebViewController>();
+  late InAppWebViewController webViewController;
 
   //TODO 1.1: Get Authorization Code
   //Authorization Code = Token ที่เกิดจากการ "อนุญาตสิทธิ์" ของเราให้ Client
@@ -36,41 +36,34 @@ class InstagramAPI {
     return code;
   }
 
-  //TODO 1.2: Open App Instagram
+  //TODO 1.2: Open WebView Instagram
   Widget _buildWebview(BuildContext context, String url) {
     return SafeArea(
-      child: WebView(
-        initialUrl: url,
-        //เปิดใช้งาน JavaScript ใน WebView โดยไม่มีการจำกัดใดๆ
-        javascriptMode: JavascriptMode.unrestricted,
+      child: InAppWebView(
+        //เปิดเว็ปตาม initialUrl
+        initialUrlRequest: URLRequest(url: Uri.parse(initialUrl)),
         //เมื่อ WebView ถูกสร้างขึ้นและพร้อมใช้งาน จะเปิดให้ควบคุมจอได้
-        onWebViewCreated: (WebViewController controller) {
-          _controller.complete(controller);
+        onWebViewCreated: (controller) {
+          webViewController = controller;
         },
-        //navigationDelegate คือ การจัดการกับการนำทางขณะที่ใช้งาน WebView
-        navigationDelegate: (NavigationRequest request) async {
-          //Case1: WebView ได้ทำการนำไปยัง redirectUri หรือไม่?
-          if (request.url.startsWith(redirectUri)) {
-            //แปลงค่า Authorization Code
-            final Uri uri = Uri.parse(request.url);
-            final String? code = uri.queryParameters['code'];
+        onLoadStart: (controller, url) {
+          //Case 1: User Allow
+          if (url.toString().contains('?code=')) {
+            final uri = Uri.parse(url.toString());
+            final authCode = uri.queryParameters['code'];
 
-            if (code != null) {
-              Navigator.pop(context, code);
-            } else {
-              Navigator.pop(context);
-            }
-            //ควรป้องกันการนำทางไปยัง URL ใหม่ 
-            return NavigationDecision.prevent;
+            webViewController.stopLoading();
+            Navigator.pop(context, authCode);
+
+            //Case 2: User Doesn't Allow
+          } else if (url.toString().contains('error=access_denied')) {
+            webViewController.stopLoading();
+            Navigator.pop(context);
           }
-
-          //Case 2: ควรทำการนำทางไปยัง URL ใหม่ตามคำขอ (เช่นหน้า login IG มั้ง)
-          return NavigationDecision.navigate;
         },
       ),
     );
   }
-  
 
   //TODO 2: Get Access Token
   Future<String> getAccessToken(String authorizationCode) async {
