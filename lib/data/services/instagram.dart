@@ -49,9 +49,9 @@ class InstagramAPI {
         },
         //navigationDelegate คือ การจัดการกับการนำทางขณะที่ใช้งาน WebView
         navigationDelegate: (NavigationRequest request) async {
-          //Case1: WebView ได้ทำการนำไปยัง redirectUri หรือไม่? (หน้าขออนุญาติ)
+          //Case1: WebView ได้ทำการนำไปยัง redirectUri หรือไม่?
           if (request.url.startsWith(redirectUri)) {
-            //แปลงค่า redirectUri ให้เป็น Authorization Code
+            //แปลงค่า Authorization Code
             final Uri uri = Uri.parse(request.url);
             final String? code = uri.queryParameters['code'];
 
@@ -60,16 +60,17 @@ class InstagramAPI {
             } else {
               Navigator.pop(context);
             }
-            //ควรป้องกันการนำทางไปยัง URL ใหม่ (หน้าแรก Feed IG)
+            //ควรป้องกันการนำทางไปยัง URL ใหม่ 
             return NavigationDecision.prevent;
           }
 
-          //Case 2: ควรทำการนำทางไปยัง URL ใหม่ตามคำขอ (หน้า login IG)
+          //Case 2: ควรทำการนำทางไปยัง URL ใหม่ตามคำขอ (เช่นหน้า login IG มั้ง)
           return NavigationDecision.navigate;
         },
       ),
     );
   }
+  
 
   //TODO 2: Get Access Token
   Future<String> getAccessToken(String authorizationCode) async {
