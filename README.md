@@ -1,6 +1,8 @@
 # flutter_instagram
 
-A new Flutter project.
+!!Need to add Tester role on Facebook Developer!!
+
+https://stackoverflow.com/questions/58778302/instagram-display-api-insufficient-developer-role
 
 ## Getting Started
 
